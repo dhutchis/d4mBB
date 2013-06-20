@@ -4,9 +4,9 @@
 % (3) Querying data to answer several questions of interest
 
 % User Parameters:
-doDB = 1;   % Use an Accumulo Database instead of in-memory Associative Arrays
+doDB = 0;   % Use an Accumulo Database instead of in-memory Associative Arrays
 DB = DBserver('localhost:2181','Accumulo','accumulotraining', ...
-    'root','accumulotraining'); % configure this for your cluster
+    'root','password'); % configure this for your cluster
 % assume the table names below
 
 %% Part 1: Loading data set into memory / Accumulo
@@ -140,91 +140,82 @@ NumStr(Row(A_light_LB))                               % (Answer) 4463 players
 %   the DB 7447 more rows than necessary.
 
 
-%% Find the top 5 players with highest total salary -- In Memory Version
-if ~doDB
-    % First link each player to all the salary columns he's earned across his career
-    % player_id -> row
-    player_id = As_exp(:,StartsWith('playerID|,')).';
-    % playerID -> sal|1,1 sal|2,1 sal|3,2
-    Apsal = player_id * As_exp(:,StartsWith('salary|,'));
-    
-    % Apsal contains some repeated salaries for players.  For example,
-    %  if a player earned the same salaryA for two years in his career, he would
-    %  have a value of 2 in the value of Apsal(player,salaryA)
-    % We need to keep this frequency and multiply it with the corresponding salary
-    [plid, sal, freq] = find(Apsal);
-    % Let's get the salary values themselves into the value from the column
-    [~, salval] = SplitStr(sal,'|'); % salname is salary, salval salary string
-    % Matlab 2013a has a simpler function: salcol = strsplit(salval,',').';
-    %                           salnum = cellfun(@str2num,salcol(1:end-1));
-    % This is a workaround
-    salcol = textscan(salval,'%s','delimiter',',');
-    salnum = cell2mat(cellfun(@str2num,salcol{:},'UniformOutput',false));
-    
-    % Now we can element-wise multiply the salary and frequency
-    saltot = salnum .* freq;
-    % Now reform the Assoc, using the sum collition function to combine different
-    % salaries of different years (each already multiplied by their freq)
-    Apsalsum = Assoc(plid, 'salary,', saltot, @sum);
-    % Answer!
-    Atop = TopRowPerCol(Apsalsum, 5);
-    Atop
-    
-    % Here's some other nice correlations we can do between other variables and
-    % the career salary of the top 5 players with highest career salary
-    Am_exp(:,StartsWith('weight|,')).' * Atop % link weight to top earning players
-    Am_exp(:,StartsWith('height|,')).' * Atop % link height
-    Am_exp(:,StartsWith('bats|,')).'   * Atop % link bats
-    % This keeps the individual salaries in the values for examination
-    % FIXME: Make Matlab not use exponential notation here
-    CatValMul(num2str(Am_exp(:,StartsWith('bats|,')).'), num2str(Atop))
-end
+%% Find the top 5 players with highest total salary -- High Memory Version
+%This version assumes that we can hold all the entire salary history of all players
+% First link each player to all the salary columns he's earned across his career
+% player_id -> row
+player_id = Ts(:,StartsWith('playerID|,')).';
+% playerID -> sal|1,1 sal|2,1 sal|3,2
+Apsal = player_id * Ts(:,StartsWith('salary|,'));
 
-%% Find the top 5 players with highest total salary -- DB Version
-if doDB
-    % Let's not assume we can hold all the data in memory at once.
-    % Assume we can hold in memory the the salary sum for all players
-    %  + the entire salary history for up to 1000 players.
-    %  (Pretend if we load any more data we will run out of local memory.)
-    % Iterate over 1000 players at a time, gathering all the yearly salaries
-    % for each of the 1000 players and retain the cummulative sum of every player
-    itCount = 1000;
-    Titer = Iterator(Ts, 'elements', itCount);
-    Apsalsum = Assoc('','','');
-    plrow = '';
-    
-    % The iterator will return 1000 rows at a time, since each row only
-    %  has a single playerID column.
-    Apl = Titer(:,StartsWith('playerID|,')); % row -> playerID
-    while nnz(Apl)
-        % get all info for for same rows from DB
-        Asal = Ts(Row(Apl),:);%StartsWith('salary|,'));
-        Apsal = Apl.' * Asal(:,StartsWith('salary|,'));
-        % See in memory version above for explanation
-        [plid, sal, freq] = find(Apsal);  % sal is sal|1234
-        [~, salval] = SplitStr(sal,'|');
-        % Matlab 2013a has a simpler function: salcol = strsplit(salval,',').';
-        %                           salnum = cellfun(@str2num,salcol(1:end-1));
-        % This is a workaround
-        salcol = textscan(salval,'%s','delimiter',',');
-        salnum = cell2mat(cellfun(@str2num,salcol{:},'UniformOutput',false));
-        saltot = salnum .* freq;
-        Apsalsum_part = Assoc(plid, 'salary,', saltot, @sum); % answer part
-        
-        % add to running total sum
-        Apsalsum = Apsalsum + Apsalsum_part;
-        % get next part of table from DB
-        Apl = Titer();
-    end
-    %Apsalsum has the answer; links all players to their lifetime salaries
-    Atop = TopRowPerCol(Apsalsum, 5); % top 5 highest
-    Atop
-    
-    Am_exp(:,StartsWith('weight|,')).' * Atop % link weight to top earning players
-    Am_exp(:,StartsWith('height|,')).' * Atop % link height
-    Am_exp(:,StartsWith('bats|,')).' * Atop   % link bats
-    CatValMul(num2str(Am_exp(:,StartsWith('bats|,')).'), num2str(Atop))
+% Apsal contains some repeated salaries for players.  For example,
+%  if a player earned the same salaryA for two years in his career, he would
+%  have a value of 2 in the value of Apsal(player,salaryA)
+% We need to keep this frequency and multiply it with the corresponding salary
+[plid, sal, freq] = find(Apsal);
+% Let's get the salary values themselves into the value from the column
+[~, salval] = SplitStr(sal,'|'); % salname is salary, salval salary string
+salnum = str2num(Str2mat(salval));
+
+% Now we can element-wise multiply the salary and frequency
+saltot = salnum .* freq;
+% Now reform the Assoc, using the sum collition function to combine different
+% salaries of different years (each already multiplied by their freq)
+Apsalsum = Assoc(plid, 'salary,', saltot, @sum);
+% Answer!
+Atop = TopRowPerCol(Apsalsum, 5);
+Atop
+
+% Here's some other nice correlations we can do between other variables and
+% the career salary of the top 5 players with highest career salary
+Am_exp(:,StartsWith('weight|,')).' * Atop % link weight to top earning players
+Am_exp(:,StartsWith('height|,')).' * Atop % link height
+Am_exp(:,StartsWith('bats|,')).'   * Atop % link bats
+% This keeps the individual salaries in the values for examination
+% FIXME: Make Matlab not use exponential notation here
+CatValMul(num2str(Am_exp(:,StartsWith('bats|,')).'), num2str(Atop))
+
+
+%% Find the top 5 players with highest total salary -- Low Memory Version
+% NOTE: This works with both doDB=1 (using Accumulo) and doDB=0 (using local Assoc)
+% Let's not assume we can hold all the data in memory at once.
+% Assume we can hold in memory the the salary sum for all players
+%  + the entire salary history for up to 1000 players.
+%  (Pretend if we load any more data we will run out of local memory.)
+% Iterate over 1000 players at a time, gathering all the yearly salaries
+% for each of the 1000 players and retain the cummulative sum of every player
+itCount = 1000;
+Titer = Iterator(Ts, 'elements', itCount);
+Apsalsum = Assoc('','','');
+plrow = '';
+
+% The iterator will return 1000 rows at a time, since each row only
+%  has a single playerID column: rowID -> playerID
+Apl = Titer(:,StartsWith('playerID|,')); % row -> playerID
+while nnz(Apl)
+    % get all info for for same rows from DB
+    Asal = Ts(Row(Apl),:);%StartsWith('salary|,'));
+    Apsal = Apl.' * Asal(:,StartsWith('salary|,'));
+    % See in memory version above for explanation
+    [plid, sal, freq] = find(Apsal);  % sal is sal|1234
+    [~, salval] = SplitStr(sal,'|');
+    salnum = str2num(Str2mat(salval));
+    saltot = salnum .* freq;
+    Apsalsum_part = Assoc(plid, 'salary,', saltot, @sum); % answer part
+
+    % add to running total sum
+    Apsalsum = Apsalsum + Apsalsum_part;
+    % get next part of table from DB
+    Apl = Titer();
 end
+%Apsalsum has the answer; links all players to their lifetime salaries
+Atop = TopRowPerCol(Apsalsum, 5); % top 5 highest
+Atop
+
+Am_exp(:,StartsWith('weight|,')).' * Atop % link weight to top earning players
+Am_exp(:,StartsWith('height|,')).' * Atop % link height
+Am_exp(:,StartsWith('bats|,')).' * Atop   % link bats
+CatValMul(num2str(Am_exp(:,StartsWith('bats|,')).'), num2str(Atop))
 
 %% For archival, let's save our career player salary table to disk
 Assoc2CSV(Apsalsum,char(10),',','Results_playerToSalarySum.csv');

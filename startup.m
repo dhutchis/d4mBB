@@ -1,5 +1,5 @@
-%cd /home/accuser/mymat
-%pwd
+% This file is for installing D4M
+% Use it with as per the instructions in the README of D4M
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   D4M_HOME = '/home/accuser/software/d4m_api';       % SET TO LOCATION OF D4M.
 
