@@ -129,14 +129,14 @@ A = Assoc(r,'name,',v,@AssocCatStrFunc);
 A = sum(str2num(Tmd('weight|000,:,weight|199,',:)),1); % 13182 weight < 200lb.
 B = str2num(Tmd('bats|L,bats|B,',:));    % 4629 bat with left, 1106 both hands
 
-% A < B, so we will first query for all the rows of players that weigh < 200 lb.
-% Then, within those rows, we will find the players that bat L or B
-A_light = Tm(:,'weight|000,:,weight|199,');
-A_light_all = Tm(Row(A_light),:);
-A_light_LB = A_light_all(:,'bats|L,bats|B,');
-NumStr(Row(A_light_LB))                               % (Answer) 4463 players
+% A > B, so we will first query for all the rows of players that bat L or B
+% Then, within those rows, we will find the players that weigh < 200 lb.
+A_LB = Tm(:,'bats|L,bats|B,');
+A_LB_all = Tm(Row(A_LB),:);
+A_LB_light = A_LB_all(:,'weight|000,:,weight|199,');
+NumStr(Row(A_LB_light))                               % (Answer) 4463 players
 % The query is optimized because going the other way around, querying for
-%   LB batters and then refining to those weighing <200lb., would query from
+%   those weighing <200lb. and then refining to LB batters, would query from
 %   the DB 7447 more rows than necessary.
 
 
