@@ -1,0 +1,40 @@
+Amall = ReadCSV('../Master_mod.csv');
+Asall = ReadCSV('../Salaries_mod.csv');
+doTableDDA(Amall);
+Entity       :     Ni,    Vi,    Mi; Type          
+---------------------------------------------------
+bats,        :  16780, 16780,     3; Organizational
+birthCity,   :  17664, 17664,  4671; Organizational
+birthCountry,:  17780, 17780,    60; Organizational
+birthDay,    :  17517, 17517,    31; Organizational
+birthMonth,  :  17661, 17661,    12; Organizational
+birthState,  :  16083, 16083,    81; Organizational
+birthYear,   :  17879, 17879,   164; Organizational
+college,     :   3954,  3954,  1056; Organizational
+deathCity,   :   8423,  8423,  2357; Organizational
+deathCountry,:   8427,  8427,    27; Organizational
+deathDay,    :   8463,  8463,    31; Organizational
+deathMonth,  :   8463,  8463,    12; Organizational
+deathState,  :   8338,  8338,    66; Organizational
+deathYear,   :   8394,  8394,   137; Organizational
+debut,       :  17733, 17733,  9539;       Identity
+finalGame,   :  15628, 15628,  8153;       Identity
+height,      :  17267, 17267,    22; Organizational
+hofID,       :   1189,  1189,  1189;       Identity
+managerID,   :    678,   678,   678;       Identity
+nameFirst,   :  18075, 18075,  2208; Organizational
+nameGiven,   :  17306, 17306, 11899;       Identity
+nameLast,    :  18125, 18125,  9426;       Identity
+nameNick,    :   2853,  2853,  1841;       Identity
+nameNote,    :    451,   451,   450;       Identity
+playerID,    :  17946, 17946, 17945;       Identity
+throws,      :  17016, 17016,     2; Organizational
+weight,      :  17215, 17215,   130; Organizational
+doTableDDA(Asall);
+Entity   :     Ni,    Vi,    Mi; Type          
+-----------------------------------------------
+lgID,    :  23141, 23141,     2; Organizational
+playerID,:  23141, 23141,  4513; Organizational
+salary,  :  23141, 23141,  2880; Organizational
+teamID,  :  23141, 23141,    36; Organizational
+yearID,  :  23141, 23141,    28; Organizational
