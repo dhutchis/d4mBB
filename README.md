@@ -8,6 +8,9 @@ This is a demo script with a self-contained and tested Matlab script showing the
 
 The goal is to provide a complete, well-documented example demonstrating how to use D4M for data analysis on a data set of manageable size.  The techniques presented will scale to true *big data* scenarios.
 
+### Accumulo-side illustration
+Please check out [David's project here](https://github.com/medined/D4M_Schema) for a lower level perspective of how the D4M Schema works from Accumulo mutation logs. 
+
 ### Sources ###
 [D4M is available](http://www.mit.edu/~kepner/D4M/gpl.html) open source under the [GPLv2](http://www.gnu.org/licenses/gpl-2.0.html) license.
 
