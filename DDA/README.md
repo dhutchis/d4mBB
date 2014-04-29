@@ -1,5 +1,5 @@
 Performs ***Dimensional Data Analysis*** on Baseball data.
-See Kepner's upcoming paper.
+See the DDA paper below.
 
 The point is to classify entities (e.g. birthState, height, etc.)
 by their (Ni,Vi,Mi) triples, where
@@ -17,3 +17,7 @@ This serves as a useful first step in understanding the structure of a database.
 * Organizational: Ni >> Mi
 * Vestigial: Ni, Mi ~ 1
 
+
+### References
+
+Gadepally, Vijay and Jeremy Kepner.  "Big Data Dimensional Analysis".  Submitted to IEEE HPEC 2014.
